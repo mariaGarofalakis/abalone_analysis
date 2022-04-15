@@ -8,6 +8,7 @@ from scipy.io import loadmat
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn import model_selection
 import sklearn.linear_model as lm
+from toolbox_02450 import statistics
 
 
 
@@ -164,15 +165,15 @@ for train_index, test_index in CV.split(X,y):
     ####### KNN for outer loop with optimal values ######
     knclassifier = KNeighborsClassifier(n_neighbors=opt_k);
     knclassifier.fit(X_train, y_train);
-    y_est = knclassifier.predict(X_test);
-    Error_KNN_test[k] = np.sum(y_est!=y_test)/len(y_test)
+    y_est_KNN = knclassifier.predict(X_test);
+    Error_KNN_test[k] = np.sum(y_est_KNN!=y_test)/len(y_test)
     
     
     ####### Logistic Reg. for outer loop with optimal values ######
     multiReg = lm.LogisticRegression(penalty='l2', C=1/opt_lamda, max_iter=10000,multi_class='multinomial')           
     multiReg.fit(X_train, y_train)
-    y_est = multiReg.predict(X_test).T       
-    Error_logistic_test[k] = np.sum(y_est!=y_test)/len(y_test)
+    y_est_Log = multiReg.predict(X_test).T       
+    Error_logistic_test[k] = np.sum(y_est_Log!=y_test)/len(y_test)
     
     
     ##### Baseline for outer loop#####
@@ -182,13 +183,28 @@ for train_index, test_index in CV.split(X,y):
     class_num[2] = np.count_nonzero(y_train==2)
     
     
-    y_est = np.argmax(class_num)*np.ones([len(y_test),1])
-    Error_test_baseline[k] = np.sum(y_est.squeeze()!=y_test)/len(y_test)
+    y_est_base = np.argmax(class_num)*np.ones([len(y_test),1]).squeeze()
+    Error_test_baseline[k] = np.sum(y_est_base!=y_test)/len(y_test)
     
     opt_lamda_array[k] = opt_lamda
     opt_K_array[k] = opt_k
     
     
+    #### Perform statistical evaluation with McNemars testing #######
+    
+    [thetahat_KNN_base, CI, p] = statistics.mcnemar(y_test, y_est_KNN, y_est_base)
+    print("theta = theta KNN - theta Baseline point estimate", thetahat_KNN_base, " CI: ", CI, "p-value", p)
+    print('')
+    
+    print("Compare Logistic Regression with baseline")
+    [thetahat_Log_base, CI, p] = statistics.mcnemar(y_test, y_est_Log, y_est_base)
+    print("theta = theta Logistic Regression - theta Baseline point estimate", thetahat_Log_base, " CI: ", CI, "p-value", p)
+    print('')
+    
+    print("Compare KNN with Logistic Regression")
+    [thetahat_KNN_Log, CI, p] = statistics.mcnemar(y_test, y_est_KNN, y_est_Log)
+    print("theta = theta KNN - theta Logistic Regression point estimate", thetahat_KNN_Log, " CI: ", CI, "p-value", p)
+    print('')
 
 
 
@@ -198,3 +214,5 @@ for train_index, test_index in CV.split(X,y):
 all_errors = np.array([Error_KNN_test.squeeze(),Error_logistic_test.squeeze(),Error_test_baseline.squeeze(),opt_lamda_array,opt_K_array])
 
 error_Table = pd.DataFrame(np.transpose(all_errors.squeeze()),columns=["KNN","Logistic_Regression","Baseline_model","lamda","K"])
+
+
