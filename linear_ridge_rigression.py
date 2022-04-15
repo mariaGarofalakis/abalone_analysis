@@ -183,6 +183,11 @@ print('- Test error Ridge:     {0}'.format(Error_test_rlr.mean()))
 
 min_ind = np.argmin(Error_test_rlr)
 
+print("The optimal lamda value is:")
+print(lambdas[min_ind])
+print("with generalization error")
+print(Error_test_rlr[min_ind])
+
 print('Weights of the fold with the smallest generalized error:')
 for m in range(M):
     print('{:>15} {:>15}'.format(attributeNames[m], np.round(w_rlr[m,min_ind],2)))

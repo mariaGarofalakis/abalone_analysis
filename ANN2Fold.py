@@ -70,9 +70,6 @@ Error_test_ANN = np.empty((K,1))
 
 opt_units_array = np.zeros(K)
 
-mu = np.empty((K, M-2))
-sigma = np.empty((K, M-2))
-
 
 
 
@@ -86,9 +83,7 @@ for train_index, test_index in CV.split(X,y):
     y_test = y[test_index].squeeze()
     
     
-    mu[k, :] = np.mean(X_train[:, :8], 0)
-    sigma[k, :] = np.std(X_train[:, :8], 0)
-    
+
     X_train[:, :8] = (X_train[:, :8] - mu[k, :] ) / sigma[k, :] 
     X_test[:, :8] = (X_test[:, :8] - mu[k, :] ) / sigma[k, :] 
     
@@ -149,7 +144,7 @@ for train_index, test_index in CV.split(X,y):
     opt_hiden_unit = hidden_units[np.argmin(np.mean(test_error,axis=0))]
     
     model = lambda: torch.nn.Sequential(
-                                torch.nn.Linear((M-1), opt_hiden_unit), #M features to n_hidden_units
+                                torch.nn.Linear((M), opt_hiden_unit), #M features to n_hidden_units
                                 torch.nn.Tanh(),   # 1st transfer function,
                                 torch.nn.Linear(opt_hiden_unit, 1), # n_hidden_units to 1 output neuron
                                 # no final tranfer function, i.e. "linear output"
